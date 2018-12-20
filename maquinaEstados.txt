@@ -1,0 +1,298 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+entity maquina_de_estados is
+port(
+
+	clk   : in std_logic;
+	reset : in std_logic;
+	INC   : in std_logic;
+	
+	salgado : in std_logic_vector(2 downto 0);
+	confirmar : in std_logic;
+	btcancelar : in std_logic;
+	
+	moeda_selecionada : in std_logic_vector(1 downto 0);
+	
+	estado : out std_logic_vector(2 downto 0);
+	
+	display_salgado : out integer range 0 to 6 := 0;
+	
+	display_centena : out integer range 0 to 7 := 0;
+	display_dezena  : out integer range 0 to 7 := 0;
+	display_unidade : out integer range 0 to 7 := 0;
+	
+	valor_da_moeda   : out std_logic_vector(8 downto 0);
+	
+	saldo_de_saida   : out std_logic_vector(8 downto 0);
+	
+	saldo_de_entrada : in std_logic_vector(8 downto 0) := "000000000"
+	
+);
+end maquina_de_estados;
+
+architecture hardware of maquina_de_estados is
+
+	type estados is (selecionar, estoque, moedas, confirma, valorSuficiente,valorMaior,cancelar,reset2);
+	signal estado_atual : estados := selecionar;
+	
+	signal prox_Estado: estados := selecionar;
+	
+	signal salgado_selecionado: integer range 1 to 5 := 1;
+	signal batata_g: integer range 0 to 3 := 1;
+	signal batata_m: integer range 0 to 3 := 1;
+	signal batata_p: integer range 0 to 3 := 2;
+	signal tortilha_g: integer range 0 to 3 := 1;
+	signal tortilha_p: integer range 0 to 3 := 1;
+	
+	signal num1: integer range 0 to 375 := 0;
+	signal valor_do_produto: integer range 0 to 375 := 0;
+	
+	
+begin
+	
+	SYNC: process(clk,reset, prox_Estado)
+		--variable num1 : integer range 0 to 999;
+		--variable num2 : integer range 0 to 999;
+		--variable valor_do_display : integer range 0 to 999;
+	begin
+		--if(reset = '1') then
+			--estado_atual <= selecionar;
+	
+		if(clk'event and clk = '1') then
+			estado_atual <= prox_Estado;
+		end if;
+	end process SYNC;	
+			
+	FSM: process(estado_atual, INC, salgado, confirmar, btcancelar, moeda_selecionada, saldo_de_entrada)
+		variable num2, valor_do_display : integer range 0 to 999;
+	--	variable valor_do_display : integer range 0 to 999;
+	begin
+		prox_Estado <= selecionar;
+		
+		if(INC = '1') then
+			case (estado_atual) is
+				when selecionar =>
+					estado <= "000";
+					if (confirmar = '1' and salgado = "001") then
+						display_salgado <= 1;
+						--if (confirmar = '1') then
+							salgado_selecionado <= 1;
+							prox_Estado <= estoque;
+							
+						--elsif(btcancelar = '1') then
+						--	prox_Estado <= reset2;
+						
+						--end if;
+								
+					elsif (confirmar = '1' and salgado = "010") then
+						display_salgado <= 2;
+						if (confirmar = '1') then
+							salgado_selecionado <= 2;
+							prox_Estado <= estoque;
+						
+						elsif(btcancelar = '1') then
+							prox_Estado <= reset2;
+							
+						end if;
+									
+					elsif (confirmar = '1' and salgado = "011") then
+						display_salgado <= 3;
+						if (confirmar = '1') then
+							salgado_selecionado <= 3;
+							prox_Estado <= estoque;
+						
+						elsif(btcancelar = '1') then
+							prox_Estado <= reset2;
+							
+						end if;
+								
+					elsif (confirmar = '1' and salgado = "100") then
+						display_salgado <= 4;
+						if (confirmar = '1') then
+							salgado_selecionado <= 4;
+							prox_Estado <= estoque;
+						elsif(btcancelar = '1') then
+							prox_Estado <= reset2;
+							
+						end if;
+								
+					elsif (confirmar = '1' and salgado = "101") then
+						display_salgado <= 5;
+						if (confirmar = '1') then
+							salgado_selecionado <= 5;
+							prox_Estado <= estoque;
+						elsif(btcancelar = '1') then
+							prox_Estado <= reset2;
+							
+						end if;
+					end if;	
+				when estoque =>
+					estado <= "001";
+					if(salgado_selecionado = 1) then
+						if(batata_g > 0) then
+							--batata_g <= batata_g - 1;
+							valor_do_produto <= 250;
+							display_unidade <= 250 rem 10;
+							display_dezena  <= (250 rem 100)/10;
+							display_centena <= 250 / 100;
+							--if (confirmar = '1') then
+								--display_unidade <= 0;
+								--display_dezena  <= 0;
+								--display_centena <= 0;
+								prox_Estado <= moedas;
+							--end if; 
+						--else
+							--prox_Estado <= selecionar;
+						
+						end if;
+					elsif(salgado_selecionado = 2) then
+						if(batata_m > 0) then
+							batata_m <= batata_m - 1;
+							valor_do_produto <= 150;
+							display_unidade <= 150 rem 10;
+							display_dezena  <= (150 rem 100)/10;
+							display_centena <= 150 / 100;
+							if (confirmar = '1') then
+								--display_unidade <= 0;
+								--display_dezena  <= 0;
+								--display_centena <= 0;
+								prox_Estado <= moedas;
+							end if; 
+						else
+							prox_Estado <= selecionar;	
+						end if;
+					elsif(salgado_selecionado = 3) then
+						if(batata_p > 0) then
+							batata_p <= batata_p - 1;
+							valor_do_produto <= 75;
+							display_unidade <= 75 rem 10;
+							display_dezena  <= (75 rem 100)/10;
+							display_centena <= 75 / 100;
+							if (confirmar = '1') then
+								--display_unidade <= 0;
+								--display_dezena  <= 0;
+								--display_centena <= 0;
+								prox_Estado <= moedas;
+							end if; 
+						else
+							prox_Estado <= selecionar;	
+						end if;
+					elsif(salgado_selecionado = 4) then
+						if(tortilha_g > 0) then
+							tortilha_g <= tortilha_g - 1;
+							valor_do_produto <= 350;
+							display_unidade <= 350 rem 10;
+							display_dezena  <= (350 rem 100)/10;
+							display_centena <= 350 / 100;
+							if (confirmar = '1') then
+								--display_unidade <= 0;
+								--display_dezena  <= 0;
+								--display_centena <= 0;
+								prox_Estado <= moedas;
+							end if; 
+						else
+							prox_Estado <= selecionar;
+						end if;	
+					elsif(salgado_selecionado = 5) then
+							if(tortilha_p > 0) then
+								tortilha_p <= tortilha_p - 1;
+								valor_do_produto <= 200;
+								display_unidade <= 200 rem 10;
+								display_dezena  <= (200 rem 100)/10;
+							   display_centena <= 200 / 100;
+								if (confirmar = '1') then
+									--display_unidade <= 0;
+									--display_dezena  <= 0;
+									--display_centena <= 0;
+									prox_Estado <= moedas;
+								end if; 
+							else
+								prox_Estado <= selecionar;
+							end if;
+					end if;	
+					
+				when moedas =>
+					estado <= "010";
+					display_salgado <= 0;
+					if(confirmar = '1' and moeda_selecionada = "01") then
+						--moeda 25 cents
+						valor_da_moeda <= "000011001";
+						prox_Estado <= confirma;
+					elsif(confirmar = '1' and moeda_selecionada = "10") then
+						--moeda 50 cents
+						valor_da_moeda <= "000110010";
+						prox_Estado <= confirma;
+					elsif(confirmar = '1' and moeda_selecionada = "11") then
+						--moeda 1 real
+						valor_da_moeda <= "001100100";
+						prox_Estado <= confirma;
+					end if;
+				when confirma =>
+					estado <= "011";
+					
+					num1 <= to_integer(signed(saldo_de_entrada));
+					
+					--saldo_de_saida <= saldo_de_entrada; -- ta bugando aqui
+					
+					--display_unidade <= num1 rem 10;
+					--display_dezena  <= (num1 rem 100)/10;
+				   --display_centena <= num1 / 100;
+					--if (confirmar = '1') then
+					
+					--end if;
+					if(num1 < valor_do_produto) then
+					  prox_Estado <= moedas;
+					elsif(num1 > valor_do_produto) then
+					  num1 <= num1 - valor_do_produto;
+					  prox_Estado <= valorMaior;
+					elsif(num1 = valor_do_produto) then
+					  prox_Estado <= valorSuficiente;	
+					end if;
+					
+				when valorSuficiente =>
+					estado <= "100";
+					-- estado para zerar valores antes de voltar para selecionar
+					prox_Estado <= reset2;
+					
+				when valorMaior =>
+					estado <= "101";
+					
+					--num1 := num1 - valor_do_produto;
+					-- valor do troco
+					display_unidade <= num1 rem 10;
+					display_dezena  <= (num1 rem 100)/10;
+					display_centena <= num1 / 100;
+					
+					if (confirmar = '1') then
+						prox_Estado <= reset2;
+					end if;
+					--esperar confirma para depois ir para o estado selecionar
+					--mostrar o troco aqui
+					
+					--num1 = num1 - valor_do_produto;
+					--mostra na tela num1 que eh o troco;
+					--saldo_de_entrada = "000000000" zera o saldo de entrada;
+					
+				when cancelar =>
+					estado <= "110";
+					--mostra na tela o saldo de entrada como se estivesse devolvendo o valor
+					--saldo_de_entrada = "000000000";
+					prox_Estado <= reset2;
+				when reset2 =>
+					estado <= "111";
+					
+					valor_da_moeda <= "000000000";
+					saldo_de_saida <= "000000000";
+					display_unidade <= 0;
+					display_dezena  <= 0;
+					display_centena <= 0;
+					display_salgado <= 0;
+					prox_Estado <= selecionar;
+				when others =>
+				
+			end case;
+		end if;
+	end process FSM;
+end hardware;

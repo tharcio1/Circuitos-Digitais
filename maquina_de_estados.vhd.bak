@@ -1,0 +1,59 @@
+--DECLARAÇÃO DE PACOTE COM NOVO TIPO
+package my_types is
+	type estados is (q0,q1,q3);
+end my_types;
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+use work.my_types.all; -- USO DO PACOTE COM NOVO TIPO
+
+architecture behave of UC is
+	signal estado_atual, proximo_estado: estados;
+	
+begin
+
+atualizacao: process(clk)
+begin
+
+if (clk'event and clk = '1')then
+	estado_atual <= proximo_estado;
+end if;
+
+end process atualizacao;
+
+begin
+proximo_estado <= s0;
+
+case estado_atual is
+--seleciona produto e vai para q0
+--valorInserido comeca em 0
+when q0 =>
+	if (produto > 0)then
+	  proximo_estado <= q1;
+	else
+	  proximo_estado <= q0;
+	    -- escreve erro e espera um tempo para poder selecionar um produto novamente
+   end if;
+when q1 =>
+  if (valorInserido < valorDoProduto)then
+    proximo_estado <= q1;
+	 --vai acumulando o valor
+  else
+    proximo_estado <= q3;
+	 --proximo estado recebe q3 e a maquina libera o produto em q3
+  end if;
+when q3 =>
+  if (valorInserido = valorDoProduto)then
+    proximo_estado <= q0;
+	 --libera_produto
+	 --limpa_soma
+  else
+    proximo_estado <= q0;
+	 --libera_troco   essa funcao poderia ser algo para ser verificado e assim evitar ter duas condicoes indo pro mesmo estado?
+	 --libera_produto
+	 --limpa_soma
+  end if;	 
+end case;
