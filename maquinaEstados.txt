@@ -52,7 +52,7 @@ architecture hardware of maquina_de_estados is
 	
 begin
 	
-	SYNC: process(clk,reset, prox_Estado)
+	SYNC: process(clk,reset)
 		--variable num1 : integer range 0 to 999;
 		--variable num2 : integer range 0 to 999;
 		--variable valor_do_display : integer range 0 to 999;
@@ -244,11 +244,19 @@ begin
 					--end if;
 					if(num1 < valor_do_produto) then
 					  prox_Estado <= moedas;
-					elsif(num1 > valor_do_produto) then
-					  num1 <= num1 - valor_do_produto;
+					--elsif(num1 > valor_do_produto) then
+					  --num1 <= num1 - valor_do_produto;
+					  --prox_Estado <= valorMaior;
+					--elsif(num1 = valor_do_produto) then
+					  --prox_Estado <= valorSuficiente;	
+					end if;
+					
+					if(num1 > valor_do_produto) then
 					  prox_Estado <= valorMaior;
-					elsif(num1 = valor_do_produto) then
-					  prox_Estado <= valorSuficiente;	
+					end if;
+					
+					if(num1 = valor_do_produto) then
+					  prox_Estado <= valorSuficiente;
 					end if;
 					
 				when valorSuficiente =>
